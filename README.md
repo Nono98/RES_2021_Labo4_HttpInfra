@@ -37,7 +37,7 @@ Ce fichier permet de configurer l'image Docker du serveur apache httpd.
 
 Le `FROM` permet de définir l'image de base, ici nous héritons de l'image `7.2-apache` de `php`.
 
-Le `COPY` va aller copier le contenu du dossier `src` vers le répertoire `/var/www/html/`. Nous allons voir plus tard ce qu'est ce répertoire.
+Le `COPY` va aller copier le contenu du dossier `src` vers le répertoire `/var/www/html/`.
 
 #### Fichier `build-images.sh`
 
