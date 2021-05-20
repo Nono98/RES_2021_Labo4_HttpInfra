@@ -78,7 +78,7 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-http/
 
 ### Démonstration
 
-1. Cloner le projet dans le répertoire de votre choix
+1. Cloner le projet dans un répertoire
 
    ```bash
    git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
@@ -94,6 +94,57 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-http/
    ```
    Cela va construire l'image et créer les deux containers, pour donner une structure semblable à celle-ci:
    
-   ![](figures/Structure-Etape1.png)
+   <img src="figures/Structure-Etape1.png" style="text-align:center;" />
    
-3. 
+3. Il faut maintenant récupérer l'IP de la machine locale (que l'on voit également dans la cature ci-dessus), afin de se connecter sur le serveur apache que l'on vient de lancer. Pour ce faire, il faut exécuter la commande suivante et localiser l'adresse de la machine.
+
+   ```bash
+   ip addr
+   ```
+
+4. Pour se connecter, il faut aller sur un navigateur et taper l'adresse IP récupérée suivie de `:9090` pour le premier container, ou de `:9091` pour le deuxième container dans la barre d'adresse. Par exemple: 192.168.1.116:9090
+
+   On peut maintenant apercevoir le site Web:
+
+   <img src="figures/Capture-SiteWeb.png" style="zoom:67%; text-align:center;" />
+
+   On peut également aller plus loin en explorant quelque peu la configuration du serveur apache avec les étapes suivantes:
+
+5. Récupérer le nom de l'un des containers créé en tapant la commande:
+
+   ```bash
+   docker ps
+   ```
+
+   On obtient le résultat suivant:
+
+   CONTAINER ID   IMAGE                 COMMAND                  CREATED          STATUS          PORTS                                   NAMES
+   ebc2bc6e41fc   res-http/apache-php  "docker-php-entrypoi…"   15 minutes ago   Up 15 minutes   0.0.0.0:9091->80/tcp, :::9091->80/tcp   `epic_rosalind`
+   d57f4407ee3c   res-http/apache-php  "docker-php-entrypoi…"   15 minutes ago   Up 15 minutes   0.0.0.0:9090->80/tcp, :::9090->80/tcp   `unruffled_turing`
+
+   Les noms seront différents puisqu'ils sont générés aléatoirement.
+
+6. Le nom récupéré va nous servir à se connecter directement sur le container avec la commande suivante:
+
+   ```bash
+   docker exec -it epic_rosalind /bin/bash
+   ```
+
+   Le nom du container `epic_rosalind` à remplacer par celui trouvé par la commande précédente.
+
+   Nous sommes maintenant connecté directement sur la machine et pouvons exécuter les commandes souhaitées.
+
+7. Il faut maintenant se rendre dans le répertoire `/etc/apache2` avec la commande:
+
+   ```bash
+   cd /etc/apache2
+   ```
+
+   C'est ici que les fichiers de configuration se situent (que l'on peut voir avec la commande `ls`), notamment dans le répertoire `sites-available` et le fichier `000-default.conf` que l'on voit ci-dessous:
+
+   <img src="figures/Fichier-000-default.png" style="text-align:center;" />
+
+8. Enfin, pour quitter le terminal, il suffit simplement d'exécuter la commande `exit`.
+
+## Etape 2: Serveur HTTP dynamique avec express.js
+
