@@ -148,3 +148,14 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-http/
 
 ## Etape 2: Serveur HTTP dynamique avec express.js
 
+### Objectifs
+
+- Ecrire une application HTTP en Node.js, qui retourne un payload sur une requête GET
+- Apprendre comment utiliser `Postman` pour tester des applications HTTP
+
+### Infrastructure
+
+
+
+### Démonstration
+
