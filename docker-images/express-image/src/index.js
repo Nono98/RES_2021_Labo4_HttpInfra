@@ -4,27 +4,30 @@ var Express = require('express');
 var app = Express();
 
 var chance = new Chance();
-var dice = chance.integer({ min: 1, max: 6 });
 
-function generateNumber(numberMax) {
-    if(numberMax < 1){
-        return null;
+function generateDices() {
+    var numberOfDices = chance.integer({
+        min: 0,
+        max: 10
+    });
+    console.log("numberOfDices: " + numberOfDices);
+    var dices = [];
+    for (var i = 0; i < numberOfDices; i++){
+        dices.push({
+            launchNumber: i+1, 
+            result: chance.integer({ 
+                min: 1, 
+                max: 6
+            })
+        });
     }
-    return chance.integer({ min: 1, max: numberMax });
+    console.log(dices);
+    return dices;
 }
 
-app.get('/:number?', ((req, res) => {
-    const generatedNumber = generateNumber(req.params.number);
-    if(!generatedNumber){
-        return res.status(404).json({
-            error:"Pas réussi à générer un nombre !"
-        })
-    }
-    res.json({
-        numberMax:req.params.number,
-        generatedNumber:generatedNumber
-    })
-}));
+app.get('/', function(req, res) {
+    res.send(generateDices());
+});
 
 app.listen(3000, function(){
     console.log('Accepting HTTP requests on port 3000 !');
