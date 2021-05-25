@@ -96,7 +96,7 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-http/
    
    <img src="figures/Structure-Etape1.png" style="text-align:center;" />
    
-3. Il faut maintenant récupérer l'IP de la machine locale (que l'on voit également dans la cature ci-dessus), afin de se connecter sur le serveur apache que l'on vient de lancer. Pour ce faire, il faut exécuter la commande suivante et localiser l'adresse de la machine.
+3. Il faut maintenant récupérer l'IP de la machine locale (que l'on voit également dans la capture ci-dessus), afin de se connecter sur le serveur apache que l'on vient de lancer. Pour ce faire, il faut exécuter la commande suivante et localiser l'adresse de la machine.
 
    ```bash
    ip addr
@@ -147,4 +147,137 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-http/
 8. Enfin, pour quitter le terminal, il suffit simplement d'exécuter la commande `exit`.
 
 ## Etape 2: Serveur HTTP dynamique avec express.js
+
+### Objectifs
+
+- Ecrire une application HTTP en Node.js, qui retourne un payload sur une requête GET
+- Apprendre comment utiliser `Postman` pour tester des applications HTTP
+
+### Infrastructure
+
+Pour cette deuxième étape, l'infrastructure de l'image Docker se trouve dans le répertoire `./docker-images/express-image`.
+
+#### Dossier `src`
+
+Le dossier `src` contient les fichiers sources nécessaires pour l'application JSON.
+
+#### Fichier `Dockerfile`
+
+Contenu:
+
+```dockerfile
+FROM node:15.13.0
+COPY src/ /opt/app
+CMD ["node", "/opt/app/index.js"]
+```
+
+Ce fichier permet de configurer l'image Docker du serveur apache httpd.
+
+Le `FROM` permet de définir l'image de base, ici nous héritons de l'image `node` en version `15.13.0`.
+
+Le `COPY` va aller copier le contenu du dossier `src` vers le répertoire `/opt/app`.
+
+Le `CMD` permet de lancer une commande, ici `node /opt/app/index.js`.
+
+#### Fichier `build-images.sh`
+
+Contenu:
+
+```bash
+#!/bin/bash
+docker build -t res-express .
+```
+
+Ce fichier permet de construire l'image Docker qui a été configurée dans le fichier `Dockerfile`.
+
+Le paramètre `-t` permet de spécifier un nom à l'image, ici `res-express`.
+
+#### Fichier `run-container.sh`
+
+Contenu:
+
+```bash
+#!/bin/bash
+docker run -p 9092:3000 res-express
+```
+
+Ce fichier permet de créer un container sur l'image construite avec le script `build-images.sh`.
+
+Le paramètre `-p` permet de faire du "port mapping" en spécifiant le port de la machine locale à utiliser (ici `9092`) et le port du service exécuté dans le container (ici `3000`).
+
+Nous voyons également que l'on reprend le nom de l'image construite (`res-express`).
+
+### Démonstration
+
+Notre application génère un certain nombre de lancé de dés (entre 0 et 10), et affiche le numéro du lancé aisni que le résultat.
+
+1. Cloner le projet dans un répertoire si cela n'a pas déjà été fait avec l'étape précédente
+
+   ```bash
+   git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
+   ```
+
+2. Se rendre dans le répertoire `RES_2021_Labo4_HttpInfra/docker-images/express-image` et exécuter les scripts (en premier temps le script `build-images.sh`)
+
+   ```bash
+   cd RES_2021_Labo4_HttpInfra/docker-images/express-image
+   ./build-images.sh
+   ./run-container.sh
+   ```
+
+   Cela va construire l'image et créer le container, pour donner une structure semblable à celle-ci:
+
+   <img src="figures/Structure-Etape2.png" style="text-align:center;" />
+
+3. Il faut maintenant récupérer l'IP de la machine locale (que l'on voit également dans la capture ci-dessus), afin de se connecter sur le serveur apache que l'on vient de lancer. Pour ce faire, il faut exécuter la commande suivante et localiser l'adresse de la machine.
+
+   ```bash
+   ip addr
+   ```
+
+4. Pour se connecter, il faut aller sur un navigateur et taper l'adresse IP récupérée suivie de `:9092` dans la barre d'adresse. Par exemple: 192.168.1.116:9092
+
+   On peut maintenant apercevoir le résultat, où `launchNumber` est le numéro du lancé, et `result` est le résultat du lancé:
+
+   <img src="figures/Capture-Express.png" style="zoom: 150%; text-align: center;" />
+
+## Etape 3: Reverse proxy avec apache (configuration statique)
+
+### Objectifs
+
+
+
+### Infrastructure
+
+
+
+### Démonstration
+
+
+
+## Etape 4: Requêtes AJAX avec JQuery
+
+### Objectifs
+
+
+
+### Infrastructure
+
+
+
+### Démonstration
+
+
+
+## Etape 5: Configuration reverse proxy dynamique
+
+### Objectifs
+
+
+
+### Infrastructure
+
+
+
+### Démonstration
 
