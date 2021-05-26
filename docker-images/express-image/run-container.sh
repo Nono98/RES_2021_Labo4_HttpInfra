@@ -1,2 +1,2 @@
 #!/bin/bash
-docker run -p 9092:3000 res-express
+docker run -p 9091:3000 res-express
