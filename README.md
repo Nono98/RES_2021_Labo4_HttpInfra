@@ -18,7 +18,7 @@ Pour tester et suivre le contenu de ce répertoire GitHub, il faut avoir préala
 
 ### Infrastructure
 
-Pour cette première étape, l'infrastructure de l'image Docker se trouve dans le répertoire `./docker-images/apache-php-image`.
+Pour cette première étape, l'infrastructure de l'image Docker se trouve dans le répertoire `./docker-images/etape1-3/apache-php-image`.
 
 #### Dossier `src`
 
@@ -52,7 +52,7 @@ Ce fichier permet de construire l'image Docker qui a été configurée dans le f
 
 Le paramètre `-t` permet de spécifier un nom à l'image, ici `res-http/apache-php`.
 
-#### Fichiers `run-container.sh
+#### Fichier `run-container.sh`
 
 Contenu:
 
@@ -77,10 +77,10 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-http/
    git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
    ```
 
-2. Se rendre dans le répertoire `RES_2021_Labo4_HttpInfra/docker-images/apache-php-image` et exécuter les scripts (en premier temps le script `build-images.sh`)
+2. Se rendre dans le répertoire `RES_2021_Labo4_HttpInfra/docker-images/etape1-3/apache-php-image` et exécuter les scripts (en premier temps le script `build-images.sh`)
 
    ```bash
-   cd RES_2021_Labo4_HttpInfra/docker-images/apache-php-image
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape1-3/apache-php-image
    ./build-images.sh
    ./run-container.sh
    ```
@@ -146,7 +146,7 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-http/
 
 ### Infrastructure
 
-Pour cette deuxième étape, l'infrastructure de l'image Docker se trouve dans le répertoire `./docker-images/express-image`.
+Pour cette deuxième étape, l'infrastructure de l'image Docker se trouve dans le répertoire `./docker-images/etape1-3/express-image`.
 
 #### Dossier `src`
 
@@ -200,7 +200,7 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-expre
 
 ### Démonstration
 
-Notre application génère un certain nombre de lancé de dés (entre 0 et 10), et affiche le numéro du lancé aisni que le résultat.
+Notre application génère un certain nombre de lancé de dés (entre 0 et 10), et affiche le nombre de faces du dé ainsi que le résultat du lancé.
 
 1. Cloner le projet dans un répertoire si cela n'a pas déjà été fait avec l'étape précédente
 
@@ -211,7 +211,7 @@ Notre application génère un certain nombre de lancé de dés (entre 0 et 10), 
 2. Se rendre dans le répertoire `RES_2021_Labo4_HttpInfra/docker-images/express-image` et exécuter les scripts (en premier temps le script `build-images.sh`)
 
    ```bash
-   cd RES_2021_Labo4_HttpInfra/docker-images/express-image
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape1-3/express-image
    ./build-images.sh
    ./run-container.sh
    ```
@@ -228,7 +228,7 @@ Notre application génère un certain nombre de lancé de dés (entre 0 et 10), 
 
 4. Pour se connecter, il faut aller sur un navigateur et taper l'adresse IP récupérée suivie de `:9091` dans la barre d'adresse. Par exemple: 192.168.1.116:9091
 
-   On peut maintenant apercevoir le résultat, où `launchNumber` est le numéro du lancé, et `result` est le résultat du lancé:
+   On peut maintenant apercevoir le résultat, où `nbFaces` est le nombre de faces du dé, et `result` est le résultat du lancé:
 
    <img src="figures/Capture-Express.png" style="zoom: 150%; text-align: center;" />
 
@@ -242,7 +242,7 @@ Notre application génère un certain nombre de lancé de dés (entre 0 et 10), 
 
 ### Infrastructure
 
-Pour cette troisième étape, l'infrastructure de l'image Docker se trouve dans le répertoire `./docker-images/apache-reverse-proxy-image`.
+Pour cette troisième étape, l'infrastructure de l'image Docker se trouve dans le répertoire `./docker-images/etape1-3/apache-reverse-proxy-image`.
 
 #### Dossier `conf`
 
@@ -339,15 +339,21 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-apach
 
    Où le nom du container est celui trouvé avec la commande `docker ps`. (Voir démonstration étape 1, point 5)
 
+   Puis pour bien tous les supprimer, exécuter:
+
+   ```bash
+   docker rm `docker ps -qa`
+   ```
+
 3. Exécuter le script de construction d'image pour les 3 containers et lancer les différents containers nécessaires:
 
    ```bash
-   cd RES_2021_Labo4_HttpInfra/docker-images/apache-reverse-proxy-image
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape1-3/apache-reverse-proxy-image
    ./build-images.sh
    ./run-containers.sh
    ```
 
-   Il faudra bien vérifier que les adresses IP des containers soient `172.17.0.2` et `172.17.0.3`.
+   Il faudra bien vérifier que les adresses IP des containers soient `172.17.0.2` et `172.17.0.3`. C'est la partie fragile de notre implémentation puisque nous ne gérons actuellement pas l'attribution des adresses IP.
 
    Cela va construire les images et créer les container, pour donner une structure semblable à celle-ci:
 
@@ -383,15 +389,81 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-apach
 
 ### Objectifs
 
-
+- Utiliser JQuery pour faire une requête AJAX
 
 ### Infrastructure
 
+Pour cette quatrième étape, l'infrastructure des images Docker se trouve dans le répertoire `./docker-images/etape4`.
 
+#### Fichiers `Dockerfile`
+
+Dans les 3 fichiers Dockerfile des images, cette ligne a été rajoutée afin de pouvoir utiliser l'application nano:
+
+```bash
+RUN apt-get update && apt-get install -y nano
+```
+
+#### Fichier `apache-php-image/src/index.html`
+
+2 lignes ont été rajoutées en fin de `body` afin de pouvoir exécuter les requêtes `AJAX`:
+
+```bash
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="assets/js/dices.js"></script>
+```
+
+#### Fichier `apache-php-image/src/assets/js/dices.js`
+
+Ce fichier a été créé afin d'y insérer le script JQuery, permettant de générer de nouveaux lancés de dés via le site dynamique toute les 2 secondes. Ce script est:
+
+```bash
+$(function() {
+        console.log("Loading dices");
+
+        function loadDices() {
+                $.getJSON( "/api/dices/", function( dices ) {
+                        console.log(dices);
+                        var message = "Nobody is here";
+                        if ( dices.length > 0 ) {
+                                message = "Nombre de faces: " + dices[0].nbFaces + ", Resultat: " + dices[0].result;
+                        }
+                        $(".resultDice").text(message);
+                });
+        };
+
+        loadDices();
+        setInterval( loadDices, 2000 );
+});
+```
 
 ### Démonstration
 
+1. Cloner le projet dans un répertoire si cela n'a pas déjà été fait avec les étapes précédentes
 
+   ```bash
+   git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
+   ```
+
+2. Arrêter l'exécution et supprimer les 3 containers créés à l'étape précédente si cela a été le cas.
+
+   ```bash
+   docker kill apache-rp
+   docker kill express-dynamic
+   docker kill apache-static
+   docker rm `docker ps -qa`
+   ```
+
+3. Relancer les 3 containers après avoir recréé les images
+
+   ```bash
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape4/apache-reverse-proxy-image
+   ./build-images.sh
+   ./run-containers.sh
+   ```
+
+4. Accéder au site via un navigateur et observer le lancement des dés:
+
+   ![](figures/Etape4-Navigateur.png)
 
 ## Etape 5: Configuration reverse proxy dynamique
 
