@@ -423,7 +423,7 @@ $(function() {
         function loadDices() {
                 $.getJSON( "/api/dices/", function( dices ) {
                         console.log(dices);
-                        var message = "Nobody is here";
+                        var message = "No dices";
                         if ( dices.length > 0 ) {
                                 message = "Nombre de faces: " + dices[0].nbFaces + ", Resultat: " + dices[0].result;
                         }
@@ -589,6 +589,166 @@ Elles permettent d'aller coper les 2 fichiers créés dans cette étape dans le 
 
 ### Objectifs
 
+- Configurer le serveur apache reverse proxy afin de pouvoir faire du load balancing sur différents containers
+
+### Infrastructure
+
+Pour cette étape additionnelle, l'infrastructure des images Docker se trouve dans le répertoire `./docker-images/etape5Add1`.
+
+#### Duplication de l'image Docker du site statique
+
+L'image du site statique a été dupliquée afin de pouvoir voir une différence et s'assurer que le load balancing fonctionne.
+
+#### Fichier `apache-reverse-proxy-image/templates/config-template.php`
+
+Contenu:
+
+```php
+<?php
+    $static_app_01 = getenv('STATIC_APP_01');
+    $static_app_02 = getenv('STATIC_APP_02');
+    $dynamic_app_01 = getenv('DYNAMIC_APP_01');
+    $dynamic_app_02 = getenv('DYNAMIC_APP_02');
+?>
+
+<VirtualHost *:80>
+    ServerName dices.res.ch
+    
+    <Proxy balancer://dynamic_app>
+        BalancerMember 'http://<?php print "$dynamic_app_01"?>'
+        BalancerMember 'http://<?php print "$dynamic_app_02"?>'
+    </Proxy>
+
+    <Proxy balancer://static_app>
+        BalancerMember 'http://<?php print "$static_app_01"?>'
+        BalancerMember 'http://<?php print "$static_app_02"?>'
+    </Proxy>
+
+    ProxyPass '/api/dices/' 'balancer://dynamic_app/'
+    ProxyPassReverse '/api/dices/' 'balancer://dynamic_app/'
+
+    ProxyPass '/' 'balancer://static_app/'
+    ProxyPassReverse '/' 'balancer://static_app/'
+</VirtualHost>
+```
+
+Ce fichier a été modifié afin de pouvoir faire le load balancing. Des `balancer` ont été ajouté, et les variables de récupération des variables d'environnement ont été modifiées.
+
+#### Fichier `apache-reverse-proxy-image/Dockerfile`
+
+Contenu:
+
+```bash
+FROM php:7.2-apache
+RUN apt-get update && apt-get install -y nano
+COPY apache2-foreground /usr/local/bin/
+COPY templates /var/apache2/templates
+COPY conf/ /etc/apache2
+RUN a2enmod proxy proxy_http proxy_balancer lbmethod_byrequests
+RUN a2ensite 000-* 001-*
+```
+
+Les paramètres `proxy_balancer` et `lbmethod_byrequests` ont été ajoutés à la commande `RUN a2enmod` afin de permettre au proxy de faire le load balancing.
+
+#### Fichier `apache-reverse-proxy-image/build-images.sh`
+
+Contenu:
+
+```bash
+#!/bin/bash
+cd ../apache-php-image-01
+./build-images.sh
+cd ../apache-php-image-02
+./build-images.sh
+cd ../express-image
+./build-images.sh
+cd ../apache-reverse-proxy-image
+docker build -t res-apache-rp .
+```
+
+Ce fichier a été modifié afin de construire les 2 images des sites statiques sépraément.
+
+#### Fichier `apache-reverse-proxy-image/run-container.sh`
+
+Contenu:
+
+```bash
+#!/bin/bash
+docker run -d --name apache-static-01 res-http/apache-php-01
+docker run -d --name apache-static-02 res-http/apache-php-02
+docker run -d --name express-dynamic-01 res-express
+docker run -d --name express-dynamic-02 res-express
+```
+
+Ce fichier a été modifié afin de lancer les 4 containers des sites statiques et dynamiques.
+
+### Démonstration
+
+1. Cloner le projet dans un répertoire si cela n'a pas déjà été fait avec les étapes précédentes
+
+   ```bash
+   git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
+   ```
+
+2. Arrêter l'exécution et supprimer les 3 containers créés à l'étape précédente si cela a été le cas.
+
+   ```bash
+   docker kill apache-rp
+   docker kill express-dynamic
+   docker kill apache-static
+   docker rm `docker ps -qa`
+   ```
+
+3. Lancer les 5 containers après avoir recréé les images
+
+   ```bash
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape5/apache-reverse-proxy-image
+   ./build-images.sh
+   ./run-container.sh
+   docker run -d -e STATIC_APP_01=172.17.0.2:80 -e STATIC_APP_02=172.17.0.3:80 -e DYNAMIC_APP_01=172.17.0.4:3000 -e DYNAMIC_APP_02=172.17.0.5:3000 -p 9093:80 --name apache-rp res-apache-rp
+   ```
+
+   Vérifier les adresses IP en exécutant la commande ci-dessous et remplacer les si nécessaire:
+
+   ```bash
+   docker inspect apache-static-01 | grep -i ipaddr # Pour la variable STATIC_APP_01
+   docker inspect apache-static-02 | grep -i ipaddr # Pour la variable STATIC_APP_02
+   docker inspect express-dynamic-01 | grep -i ipaddr # Pour la variable DYNAMIC_APP_01
+   docker inspect express-dynamic-02 | grep -i ipaddr # Pour la variable DYNAMIC_APP_02
+   ```
+
+   Cela va créer la structure suivante:
+
+   <img src="figures/Structure-EtapeAdd1.png" style="text-align:center;" />
+
+4. Accéder au site via un navigateur et observer que le load balancing fonctionne à l'aide du `(01)` et `(02)` dans le titre de bienvenue:
+
+   Site web statique 01:
+
+   ![](figures/EtapeAdd1-Navigateur01.png)
+
+   Site web statique 02:
+
+   ![](figures/EtapeAdd1-Navigateur02.png)
+
+## Etape additionnelle: Load balancing, round-robin vs sticky sessions
+
+### Objectifs
+
+- Améliorer le load balancing de l'étape précédente
+
+### Infrastructure
+
+
+
+### Démonstration
+
+
+
+## Etape additionnelle: Gestion dynamique des clusters
+
+### Objectifs
+
 
 
 ### Infrastructure
@@ -597,3 +757,16 @@ Elles permettent d'aller coper les 2 fichiers créés dans cette étape dans le 
 
 ### Démonstration
 
+
+
+## Etape additionnelle: Gestion d'une interface utilisateur
+
+### Objectifs
+
+
+
+### Infrastructure
+
+
+
+### Démonstration
