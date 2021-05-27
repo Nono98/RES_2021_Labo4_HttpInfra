@@ -593,7 +593,7 @@ Elles permettent d'aller coper les 2 fichiers créés dans cette étape dans le 
 
 ### Infrastructure
 
-Pour cette étape additionnelle, l'infrastructure des images Docker se trouve dans le répertoire `./docker-images/etape5Add1`.
+Pour cette première étape additionnelle, l'infrastructure des images Docker se trouve dans le répertoire `./docker-images/etapeAdd1`.
 
 #### Duplication de l'image Docker du site statique
 
@@ -735,15 +735,119 @@ Ce fichier a été modifié afin de lancer les 4 containers des sites statiques 
 
 ### Objectifs
 
-- Améliorer le load balancing de l'étape précédente
+- Améliorer le load balancing de l'étape précédente en utilisant des "stocky sessions"
 
 ### Infrastructure
 
+Pour cette deuxième étape additionnelle, l'infrastructure des images Docker se trouve dans le répertoire `./docker-images/etapeAdd2`.
 
+#### Fichier `apache-reverse-proxy-image/templates/config-template.php`
+
+Contenu:
+
+```php
+<?php
+    $static_app_01 = getenv('STATIC_APP_01');
+    $static_app_02 = getenv('STATIC_APP_02');
+    $dynamic_app_01 = getenv('DYNAMIC_APP_01');
+    $dynamic_app_02 = getenv('DYNAMIC_APP_02');
+?>
+
+<VirtualHost *:80>
+    ServerName dices.res.ch
+    
+    Header add Set-Cookie "ROUTEID=.%{BALANCER_WORKER_ROUTE}e; path=/" env=BALANCER_ROUTE_CHANGED
+
+    <Proxy balancer://dynamic_app>
+        BalancerMember 'http://<?php print "$dynamic_app_01"?>'
+        BalancerMember 'http://<?php print "$dynamic_app_02"?>'
+    </Proxy>
+
+    <Proxy balancer://static_app>
+        BalancerMember 'http://<?php print "$static_app_01"?>' route=1
+        BalancerMember 'http://<?php print "$static_app_02"?>' route=2
+        ProxySet lbmethod=byrequests
+        ProxySet stickysession=ROUTEID
+    </Proxy>
+
+    ProxyPass '/api/dices/' 'balancer://dynamic_app/'
+    ProxyPassReverse '/api/dices/' 'balancer://dynamic_app/'
+
+    ProxyPass '/' 'balancer://static_app/'
+    ProxyPassReverse '/' 'balancer://static_app/'
+</VirtualHost>
+```
+
+Ce fichier a été modifié afin de pouvoir utiliser les "sticky sessions". Un Header a été ajouté pour les cookies, ainsi que la ligne `ProxySet stickysession=ROUTED` dans la balise `Proxy balancer://static_app`. Des id de route ont été ajouté également pour les deux `BalancerMember` des sites statiques.
+
+#### Fichier `apache-reverse-proxy-image/Dockerfile`
+
+Contenu:
+
+```bash
+FROM php:7.2-apache
+RUN apt-get update && apt-get install -y nano
+COPY apache2-foreground /usr/local/bin/
+COPY templates /var/apache2/templates
+COPY conf/ /etc/apache2
+RUN a2enmod proxy proxy_http proxy_balancer lbmethod_byrequests headers
+RUN a2ensite 000-* 001-*
+```
+
+Le paramètres `headers` a été ajouté à la commande `RUN a2enmod`.
 
 ### Démonstration
 
+1. Cloner le projet dans un répertoire si cela n'a pas déjà été fait avec les étapes précédentes
 
+   ```bash
+   git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
+   ```
+
+2. Arrêter l'exécution et supprimer les 5 containers créés à l'étape précédente si cela a été le cas.
+
+   ```bash
+   docker kill apache-rp
+   docker kill express-dynamic-01
+   docker kill express-dynamic-02
+   docker kill apache-static-01
+   docker kill apache-static-02
+   docker rm `docker ps -qa`
+   ```
+
+3. Lancer les 5 containers après avoir recréé les images
+
+   ```bash
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape5/apache-reverse-proxy-image
+   ./build-images.sh
+   ./run-container.sh
+   docker run -d -e STATIC_APP_01=172.17.0.2:80 -e STATIC_APP_02=172.17.0.3:80 -e DYNAMIC_APP_01=172.17.0.4:3000 -e DYNAMIC_APP_02=172.17.0.5:3000 -p 9093:80 --name apache-rp res-apache-rp
+   ```
+
+   Vérifier les adresses IP en exécutant la commande ci-dessous et remplacer les si nécessaire:
+
+   ```bash
+   docker inspect apache-static-01 | grep -i ipaddr # Pour la variable STATIC_APP_01
+   docker inspect apache-static-02 | grep -i ipaddr # Pour la variable STATIC_APP_02
+   docker inspect express-dynamic-01 | grep -i ipaddr # Pour la variable DYNAMIC_APP_01
+   docker inspect express-dynamic-02 | grep -i ipaddr # Pour la variable DYNAMIC_APP_02
+   ```
+
+   Cela va créer la même structure que pour la première étape additionnelle.
+
+4. Accéder au site via un navigateur:
+
+   On peut observer que l'on accède au site statique 01 à l'aide de l'indicateur dans le titre de bienvenue:
+
+   ![](figures/EtapeAdd2-Navigateur01.png)
+
+   Nous pouvons rafraîchir la page à de nombreuses reprises, nous allons rester sur ce serveur.
+
+   Par contre, si on utilise un autre navigateur et que l'on se connecte au site, on va accéder au site statique 02:
+
+   ![](figures/EtapeAdd2-Navigateur02.png)
+
+   Encore une fois, si on rafraîchit la page à de nombreuses reprises, nous restons sur ce serveur. Le "sticky session" est donc fonctionnel.
 
 ## Etape additionnelle: Gestion dynamique des clusters
 
