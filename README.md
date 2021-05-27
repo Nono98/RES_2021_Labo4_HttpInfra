@@ -461,6 +461,8 @@ $(function() {
    ./run-containers.sh
    ```
 
+   La configuration générée est la même qu'à l'étape suivante.
+
 4. Accéder au site via un navigateur et observer le lancement des dés:
 
    ![](figures/Etape4-Navigateur.png)
@@ -469,7 +471,7 @@ $(function() {
 
 ### Objectifs
 
-
+- Se débarasser des adresses IP codées en dur dans la configuration reverse proxy
 
 ### Infrastructure
 
@@ -477,3 +479,19 @@ $(function() {
 
 ### Démonstration
 
+1. Cloner le projet dans un répertoire si cela n'a pas déjà été fait avec les étapes précédentes
+
+   ```bash
+   git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
+   ```
+
+2. Arrêter l'exécution et supprimer les 3 containers créés à l'étape précédente si cela a été le cas.
+
+   ```bash
+   docker kill apache-rp
+   docker kill express-dynamic
+   docker kill apache-static
+   docker rm `docker ps -qa`
+   ```
+
+3. 
