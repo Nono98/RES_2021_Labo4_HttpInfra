@@ -350,7 +350,7 @@ Nous voyons également que l'on reprend le nom de l'image construite (`res-apach
    ```bash
    cd RES_2021_Labo4_HttpInfra/docker-images/etape1-3/apache-reverse-proxy-image
    ./build-images.sh
-   ./run-containers.sh
+   ./run-container.sh
    ```
 
    Il faudra bien vérifier que les adresses IP des containers soient `172.17.0.2` et `172.17.0.3`. C'est la partie fragile de notre implémentation puisque nous ne gérons actuellement pas l'attribution des adresses IP.
@@ -397,7 +397,7 @@ Pour cette quatrième étape, l'infrastructure des images Docker se trouve dans 
 
 #### Fichiers `Dockerfile`
 
-Dans les 3 fichiers Dockerfile des images, cette ligne a été rajoutée afin de pouvoir utiliser l'application nano:
+Dans les 3 fichiers Dockerfile des images, cette ligne a été rajoutée afin de pouvoir utiliser l'application nano et faire des tests directement sur le container:
 
 ```bash
 RUN apt-get update && apt-get install -y nano
@@ -458,7 +458,7 @@ $(function() {
    ```bash
    cd RES_2021_Labo4_HttpInfra/docker-images/etape4/apache-reverse-proxy-image
    ./build-images.sh
-   ./run-containers.sh
+   ./run-container.sh
    ```
 
    La configuration générée est la même qu'à l'étape suivante.
@@ -475,7 +475,74 @@ $(function() {
 
 ### Infrastructure
 
+Pour cette cinquième étape, l'infrastructure des images Docker se trouve dans le répertoire `./docker-images/etape5`.
 
+#### Fichier `apache-reverse-proxy-image/run-container.sh`
+
+La dernière ligne du fichier a été supprimée. Le container reverse proxy doit maintenant être lancé "à la main", à voir dans la démonstration un peu plus bas. C'est grâce à cela que nous pouvons gérer les adresses IP dynamiquement pour effectuer le reverse proxy.
+
+#### Fichier `apache-reverse-proxy-image/templates/config-template.php`
+
+Contenu:
+
+```php
+<?php
+    $static_app = getenv('STATIC_APP');
+    $dynamic_app = getenv('DYNAMIC_APP');
+?>
+
+<VirtualHost *:80>
+    ServerName dices.res.ch
+    
+    ProxyPass '/api/dices/' 'http://<?php print "$dynamic_app"?>/'
+    ProxyPassReverse '/api/dices/' 'http://<?php print "$dynamic_app"?>/'
+
+    ProxyPass '/' 'http://<?php print "$static_app"?>/'
+    ProxyPassReverse '/' 'http://<?php print "$static_app"?>/'
+</VirtualHost>
+```
+
+Ce fichier permet via du PHP de récupérer les variables d'environnement lors du lancement du container et de les insérer dans du texte qui sera récupéré ensuite.
+
+#### Fichier `apache-reverse-proxy-image/apache2-foreground`
+
+Contenu:
+
+```bash
+#!/bin/bash
+set -e
+
+: "${APACHE_CONFDIR:=/etc/apache2}"
+: "${APACHE_ENVVARS:=$APACHE_CONFDIR/envvars}"
+if test -f "$APACHE_ENVVARS"; then
+	. "$APACHE_ENVVARS"
+fi
+
+# Apache gets grumpy about PID files pre-existing
+: "${APACHE_RUN_DIR:=/var/run/apache2}"
+: "${APACHE_PID_FILE:=$APACHE_RUN_DIR/apache2.pid}"
+rm -f "$APACHE_PID_FILE"
+
+echo "Setup for the RES lab"
+echo "Static App URL: $STATIC_APP"
+echo "Dynamic App URL: $DYNAMIC_APP"
+php /var/apache2/templates/config-template.php > /etc/apache2/sites-available/001-reverse-proxy.conf
+rm -f /var/run/apache2/apache2.pid
+exec apache2 -DFOREGROUND
+```
+
+Ce fichier a été créé afin de récupérer la configuration générée par le fichier PHP et de la mettre dans le fichier de configuration du reverse proxy.
+
+#### Fichier `apache-reverse-proxy-image/Dockerfile`
+
+Deux lignes ont été rajoutées dans ce fichiers:
+
+```bash
+COPY apache2-foreground /usr/local/bin/
+COPY templates /var/apache2/templates
+```
+
+Elles permettent d'aller coper les 2 fichiers créés dans cette étape dans le container directement.
 
 ### Démonstration
 
@@ -494,4 +561,39 @@ $(function() {
    docker rm `docker ps -qa`
    ```
 
-3. 
+3. Relancer les 3 containers après avoir recréé les images
+
+   ```bash
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape4/apache-reverse-proxy-image
+   ./build-images.sh
+   ./run-container.sh
+   docker run -d -e STATIC_APP=172.17.0.2:80 -e DYNAMIC_APP=172.17.0.3:3000 -p 9093:80 --name apache-rp res-apache-rp
+   ```
+
+   Vérifier les adresses IP en exécutant la commande ci-dessous et remplacer les si nécessaire:
+
+   ```bash
+   docker inspect apache-static | grep -i ipaddr # Pour la variable STATIC_APP
+   docker inspect express-dynamic | grep -i ipaddr # Pour la variable DYNAMIC_APP
+   ```
+
+   Cela va créer la structure suivante:
+
+   <img src="figures/Structure-Etape5.png" style="text-align:center;" />
+
+4. Accéder au site via un navigateur et observer que le site fonctionne même si les adresses IP sont différentes:
+
+   ![](figures/Etape5-Navigateur.png)
+
+## Bonus 1: Load balancing, plusieurs noeuds de serveur
+
+### Objectifs
+
+
+
+### Infrastructure
+
+
+
+### Démonstration
+
