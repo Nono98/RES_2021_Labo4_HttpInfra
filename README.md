@@ -564,7 +564,7 @@ Elles permettent d'aller coper les 2 fichiers créés dans cette étape dans le 
 3. Relancer les 3 containers après avoir recréé les images
 
    ```bash
-   cd RES_2021_Labo4_HttpInfra/docker-images/etape4/apache-reverse-proxy-image
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape5/apache-reverse-proxy-image
    ./build-images.sh
    ./run-container.sh
    docker run -d -e STATIC_APP=172.17.0.2:80 -e DYNAMIC_APP=172.17.0.3:3000 -p 9093:80 --name apache-rp res-apache-rp
@@ -585,7 +585,7 @@ Elles permettent d'aller coper les 2 fichiers créés dans cette étape dans le 
 
    ![](figures/Etape5-Navigateur.png)
 
-## Bonus 1: Load balancing, plusieurs noeuds de serveur
+## Etape additionnelle: Load balancing, plusieurs noeuds de serveur
 
 ### Objectifs
 
