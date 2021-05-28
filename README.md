@@ -853,15 +853,68 @@ Le paramètres `headers` a été ajouté à la commande `RUN a2enmod`.
 
 ### Objectifs
 
-
+- Avoir une interface pour visionner les clusters
 
 ### Infrastructure
 
+Pour cette troisième étape additionnelle, l'infrastructure des images Docker se trouve dans le répertoire `./docker-images/etapeAdd3`.
 
+#### Fichier `apache-reverse-proxy-image/templates/config-template.php`
+
+Code ajouté:
+
+```php
+<Location "/balancer-manager/">
+    SetHandler balancer-manager
+</Location>
+
+ProxyPass '/balancer-manager/' !
+```
+
+Seules ces lignes de code permettent d'accéder à une interface pour visualiser la configuration.
 
 ### Démonstration
 
+1. Cloner le projet dans un répertoire si cela n'a pas déjà été fait avec les étapes précédentes
 
+   ```bash
+   git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
+   ```
+
+2. Arrêter l'exécution et supprimer les 5 containers créés à l'étape précédente si cela a été le cas.
+
+   ```bash
+   docker kill apache-rp
+   docker kill express-dynamic-01
+   docker kill express-dynamic-02
+   docker kill apache-static-01
+   docker kill apache-static-02
+   docker rm `docker ps -qa`
+   ```
+
+3. Lancer les 5 containers après avoir recréé les images
+
+   ```bash
+   cd RES_2021_Labo4_HttpInfra/docker-images/etape5/apache-reverse-proxy-image
+   ./build-images.sh
+   ./run-container.sh
+   docker run -d -e STATIC_APP_01=172.17.0.2:80 -e STATIC_APP_02=172.17.0.3:80 -e DYNAMIC_APP_01=172.17.0.4:3000 -e DYNAMIC_APP_02=172.17.0.5:3000 -p 9093:80 --name apache-rp res-apache-rp
+   ```
+
+   Vérifier les adresses IP en exécutant la commande ci-dessous et remplacer les si nécessaire:
+
+   ```bash
+   docker inspect apache-static-01 | grep -i ipaddr # Pour la variable STATIC_APP_01
+   docker inspect apache-static-02 | grep -i ipaddr # Pour la variable STATIC_APP_02
+   docker inspect express-dynamic-01 | grep -i ipaddr # Pour la variable DYNAMIC_APP_01
+   docker inspect express-dynamic-02 | grep -i ipaddr # Pour la variable DYNAMIC_APP_02
+   ```
+
+   Cela va créer la même structure que pour la première étape additionnelle.
+
+4. Accéder au site `dices.res.ch:9093/balancer-manager` via un navigateur:
+
+   ![](figures/EtapeAdd3-Navigateur.png)
 
 ## Etape additionnelle: Gestion d'une interface utilisateur
 
