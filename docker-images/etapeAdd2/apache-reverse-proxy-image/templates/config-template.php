@@ -8,7 +8,7 @@
 <VirtualHost *:80>
     ServerName dices.res.ch
     
-    Header add Set-Cookie "ROUTEID=.%{BALANCER_WORKER_ROUTE}e; path=/" env=BALANCER_ROUTE_CHANGED
+    Header add Set-Cookie "ROUTE_DICES=.%{BALANCER_WORKER_ROUTE}e; path=/" env=BALANCER_ROUTE_CHANGED
 
     <Proxy balancer://dynamic_app>
         BalancerMember 'http://<?php print "$dynamic_app_01"?>'
@@ -19,7 +19,7 @@
         BalancerMember 'http://<?php print "$static_app_01"?>' route=1
         BalancerMember 'http://<?php print "$static_app_02"?>' route=2
         ProxySet lbmethod=byrequests
-        ProxySet stickysession=ROUTEID
+        ProxySet stickysession=ROUTE_DICES
     </Proxy>
 
     ProxyPass '/api/dices/' 'balancer://dynamic_app/'
