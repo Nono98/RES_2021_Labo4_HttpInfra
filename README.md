@@ -2,7 +2,7 @@
 
 > Auteurs: Robin Gaudin & Noémie Plancherel
 
-/!\ Ajouter description du projet /!\
+Projet réalisé dans le cadre du module RES à la HEIG-VD. Elaboration d'une infrastructure Web en plusieurs étapes.
 
 ## Etat initial
 
@@ -702,7 +702,7 @@ Ce fichier a été modifié afin de lancer les 4 containers des sites statiques 
 3. Lancer les 5 containers après avoir recréé les images
 
    ```bash
-   cd RES_2021_Labo4_HttpInfra/docker-images/etape5/apache-reverse-proxy-image
+   cd RES_2021_Labo4_HttpInfra/docker-images/etapeAdd1/apache-reverse-proxy-image
    ./build-images.sh
    ./run-container.sh
    docker run -d -e STATIC_APP_01=172.17.0.2:80 -e STATIC_APP_02=172.17.0.3:80 -e DYNAMIC_APP_01=172.17.0.4:3000 -e DYNAMIC_APP_02=172.17.0.5:3000 -p 9093:80 --name apache-rp res-apache-rp
@@ -818,7 +818,7 @@ Le paramètres `headers` a été ajouté à la commande `RUN a2enmod`.
 3. Lancer les 5 containers après avoir recréé les images
 
    ```bash
-   cd RES_2021_Labo4_HttpInfra/docker-images/etape5/apache-reverse-proxy-image
+   cd RES_2021_Labo4_HttpInfra/docker-images/etapeAdd2/apache-reverse-proxy-image
    ./build-images.sh
    ./run-container.sh
    docker run -d -e STATIC_APP_01=172.17.0.2:80 -e STATIC_APP_02=172.17.0.3:80 -e DYNAMIC_APP_01=172.17.0.4:3000 -e DYNAMIC_APP_02=172.17.0.5:3000 -p 9093:80 --name apache-rp res-apache-rp
@@ -895,7 +895,7 @@ Seules ces lignes de code permettent d'accéder à une interface pour visualiser
 3. Lancer les 5 containers après avoir recréé les images
 
    ```bash
-   cd RES_2021_Labo4_HttpInfra/docker-images/etape5/apache-reverse-proxy-image
+   cd RES_2021_Labo4_HttpInfra/docker-images/etapeAdd3/apache-reverse-proxy-image
    ./build-images.sh
    ./run-container.sh
    docker run -d -e STATIC_APP_01=172.17.0.2:80 -e STATIC_APP_02=172.17.0.3:80 -e DYNAMIC_APP_01=172.17.0.4:3000 -e DYNAMIC_APP_02=172.17.0.5:3000 -p 9093:80 --name apache-rp res-apache-rp
@@ -920,10 +920,65 @@ Seules ces lignes de code permettent d'accéder à une interface pour visualiser
 
 ### Objectifs
 
-
+- Utiliser une interface utilisateur pour pouvoir gérer les containers plus facilement
 
 ### Infrastructure
 
-
+Tout est dans la démo, aucun fichier ajouté ou modifié pour cette étape.
 
 ### Démonstration
+
+1. Cloner le projet dans un répertoire si cela n'a pas déjà été fait avec les étapes précédentes
+
+   ```bash
+   git clone git@github.com:Nono98/RES_2021_Labo4_HttpInfra.git
+   ```
+
+2. Arrêter l'exécution et supprimer les 5 containers créés à l'étape précédente si cela a été le cas.
+
+   ```bash
+   docker kill apache-rp
+   docker kill express-dynamic-01
+   docker kill express-dynamic-02
+   docker kill apache-static-01
+   docker kill apache-static-02
+   docker rm `docker ps -qa`
+   ```
+
+3. Lancer les 5 containers après avoir recréé les images
+
+   ```bash
+   cd RES_2021_Labo4_HttpInfra/docker-images/etapeAdd3/apache-reverse-proxy-image
+   ./build-images.sh
+   ./run-container.sh
+   docker run -d -e STATIC_APP_01=172.17.0.2:80 -e STATIC_APP_02=172.17.0.3:80 -e DYNAMIC_APP_01=172.17.0.4:3000 -e DYNAMIC_APP_02=172.17.0.5:3000 -p 9093:80 --name apache-rp res-apache-rp
+   ```
+
+   Vérifier les adresses IP en exécutant la commande ci-dessous et remplacer les si nécessaire:
+
+   ```bash
+   docker inspect apache-static-01 | grep -i ipaddr # Pour la variable STATIC_APP_01
+   docker inspect apache-static-02 | grep -i ipaddr # Pour la variable STATIC_APP_02
+   docker inspect express-dynamic-01 | grep -i ipaddr # Pour la variable DYNAMIC_APP_01
+   docker inspect express-dynamic-02 | grep -i ipaddr # Pour la variable DYNAMIC_APP_02
+   ```
+
+   Cela va créer la même structure que pour la première étape additionnelle.
+
+4. Exécuter la commande suivante pour générer le Docker contenant l'image de l'interface de gestion des containers (`Portainer`):
+
+   ```bash
+   docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer
+   ```
+
+5. Accéder au site `localhost:9000` via un navigateur, cela va demander un login et mot de passe:
+
+   ![](figures/EtapeAdd4-DemandeMDP.png)
+
+6. Sur la page suivante, choisir l'option `Local`, puis sélectionner la seule configuration existante (`local`), pour finalement choisir de voir les containers.
+
+   ![](figures/EtapeAdd4-Containers.png)
+
+7. On arrive désormais sur la page de gestion des containers où l'on peut tout gérer facilement:
+
+   ![](figures/EtapeAdd4-Gestionnaire.png)
