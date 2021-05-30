@@ -735,7 +735,7 @@ Ce fichier a été modifié afin de lancer les 4 containers des sites statiques 
 
 ### Objectifs
 
-- Améliorer le load balancing de l'étape précédente en utilisant des "stocky sessions"
+- Améliorer le load balancing de l'étape précédente en utilisant des "sticky sessions"
 
 ### Infrastructure
 
